@@ -7,36 +7,39 @@ def main():
     with open('data.json') as json_file:
         data = json.load(json_file)
     
-    
-    scrim = True
-    if scrim:
-        iterations = 40
+    input_yes = False
+    if input_yes:
+        iterations = input("Iterations:/t")
     else:
         iterations = 10000
     i = 0
-    copy_data = data
+
     final_diff = 999999
+    members = []
 
     while i < iterations:
         second_team = []
         #print('Iteration', iterations, end = '\t')
         
+        for member in data:
+            members.append(member)
+
         #get first team randomly
-        first_team = random.sample(copy_data, k = int(len(data) / 2))
+        first_team = random.sample(members, k = int(len(members) / 2))
         
-        for member in copy_data:
+        for member in members:
             if member not in first_team:
                 second_team.append(member)
 
         #calculate score for first team
         diff1 = 0
         for member in first_team:
-            diff1 += member['score']
+            diff1 += data[member]
 
         #calculate score for second team
         diff2 = 0
         for member in second_team:
-            diff2 += member['score']
+            diff2 += data[member]
 
         #difference
         diff = abs(diff1 - diff2)
@@ -50,27 +53,23 @@ def main():
         #else:
             #print('last team was better built')
 
-        #copy data    
-        copy_data = data
-
         #lose one iteration
         i += 1
 
-        if not iterations % 1000 or scrim:
-            print('\n-----------------------')
-            print('Iteration', iterations)
-            print('-----------------------')
-            print('team1:')
-            for gamer in final_first_team:
-                print(gamer['name'], end = ' ')
-            print('\n-----------------------')
-            print('team2:')
-            for gamer in final_second_team:
-                print(gamer['name'], end = ' ')
-            print('\n-----------------------')
-            print('skill diff:', final_diff)
-            print('-----------------------\n\n')
-    
+    print('\n-----------------------')
+    print('Iteration', iterations)
+    print('-----------------------')
+    print('team1:')
+    for gamer in final_first_team:
+        print(gamer['name'], end = ' ')
+    print('\n-----------------------')
+    print('team2:')
+    for gamer in final_second_team:
+        print(gamer['name'], end = ' ')
+    print('\n-----------------------')
+    print('skill diff:', final_diff)
+    print('-----------------------\n\n')
+
     
 main()
     
