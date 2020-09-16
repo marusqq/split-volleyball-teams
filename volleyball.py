@@ -1,10 +1,11 @@
 import json
 import random
 from subprocess import call
+from flask import Flask
 
 def bruteforce(iter, data):
     members = []
-    final_diff = 999999
+    final_diff = 999
     i = 0
     teams1 = []
     teams2 = []
@@ -57,7 +58,8 @@ def bruteforce(iter, data):
             else:
                 add_to_possible_team_list = False
 
-            teams1, teams2 = confirm_teams(teams1, teams2, final_first_team, final_second_team, final_diff, iters_done = add_to_possible_team_list)
+            # TODO: fix unused log var. P.S. not sure why confirm_teams is run twice 
+            teams1, teams2, log = confirm_teams(teams1, teams2, final_first_team, final_second_team, final_diff, iters_done = add_to_possible_team_list)
         # else:
         #     print('last team was better built')
 
@@ -80,24 +82,25 @@ def setup(filename):
     return data, iterations
 
 def confirm_teams(possible_team1, possible_team2, team1, team2, diff = None, iters_done = False):
+    log = []
 
     if iters_done:
         possible_team1.append(team1)
         possible_team2.append(team2)
     
-    print('team1:')
+    log.append('team1:\n')
     for gamer in sorted(team1):
-        print(gamer, end = ' ')
-    print('\n-----------------------')
-    print('team2:')
+        log.append(gamer + ' ')
+    log.append('\n-----------------------\n')
+    log.append('team2:\n')
     for gamer in sorted(team2):
-        print(gamer, end = ' ')
+        log.append(gamer + ' ')
     if diff is not None:
-        print('\n-----------------------')
-        print('skill diff:', diff)
-    print('-----------------------\n\n')
+        log.append('\n-----------------------\n')
+        log.append('skill diff:' + str(diff) + '\n')
+    log.append('-----------------------\n\n')
 
-    return possible_team1, possible_team2
+    return possible_team1, possible_team2, log
 
 def remove_copy_teams(teams1, teams2):
     teams1_no_dup = []
@@ -111,28 +114,43 @@ def remove_copy_teams(teams1, teams2):
         if team not in teams2_no_dup:
             teams2_no_dup.append(sorted(team)) 
 
-    print('POSSIBLE VARIATIONS:')
-    for i in range(len(teams1_no_dup) - 1):
-        print('-----------------------')
-        print('team1:')
-        print(teams1_no_dup[i], end = '\t')
-        print('')
-
-        print('team2:')
-        print(teams2_no_dup[i], end = '\t')
-        print('')
-        print('------------------------')
+    return teams1_no_dup, teams2_no_dup
         
 
+def webpage():
+    app = Flask(__name__)
+
+    @app.route("/")
+    def home():
+        output = []
+
+        data, iterations = setup('data.json')
+        final_first_team, final_second_team, final_diff, teams1, teams2 = bruteforce(iter = iterations, data = data)
+
+        output.append('FINAL SCORES:\n')
+        teams1, teams2, log = confirm_teams(teams1, teams2, final_first_team, final_second_team, final_diff, True)
+        output.append(''.join(log))
+
+        teams1_no_dup, teams2_no_dup = remove_copy_teams(teams1, teams2)
+        output.append('POSSIBLE VARIATIONS:\n')
+        for i in range(len(teams1_no_dup) - 1):
+            output.append('-----------------------\n')
+            output.append('team1:\n')
+            output.append(' '.join(teams1_no_dup[i]))
+            output.append('\n')
+
+            output.append('team2:\n')
+            output.append(' '.join(teams2_no_dup[i]))
+            output.append('\n')
+            output.append('------------------------\n')
+
+        return ''.join(output)
+        
+    if __name__ == "__main__":
+        app.run(debug=True)
 
 def main():
-    
-    data, iterations = setup('data.json')
-    final_first_team, final_second_team, final_diff, teams1, teams2 = bruteforce(iter = iterations, data = data)
-    print('FINAL SCORES:')
-    teams1, teams2 = confirm_teams(teams1, teams2, final_first_team, final_second_team, final_diff, True)
-    remove_copy_teams(teams1, teams2)
-    
+    webpage()
 
 main()
     
